@@ -46,6 +46,54 @@ terraform init
 terraform apply
 ```
 
+## Performance Testing
+
+The infrastructure includes a persistent Triton container for manual performance testing:
+
+### Running Performance Tests
+
+1. **Access the Triton container**:
+   ```bash
+   kubectl exec -it deployment/triton-perf -n llm -- bash
+   ```
+
+2. **Run basic inference test**:
+   ```bash
+   curl -X POST http://llm-gpu.llm.svc.cluster.local:8000/v1/completions \
+     -H "Content-Type: application/json" \
+     -d '{
+       "model": "openai/gpt-oss-20b",
+       "prompt": "The capital of France is",
+       "max_tokens": 10,
+       "temperature": 0.7
+     }'
+   ```
+
+3. **Run comprehensive performance test**:
+   ```bash
+   genai-perf profile -m openai/gpt-oss-20b \
+     --url http://llm-gpu.llm.svc.cluster.local:8000 \
+     --service-kind openai \
+     --endpoint-type completions \
+     --num-prompts 100 \
+     --synthetic-input-tokens-mean 200 \
+     --synthetic-input-tokens-stddev 20 \
+     --output-tokens-mean 100 \
+     --output-tokens-stddev 10 \
+     --concurrency 10 \
+     --tokenizer hf-internal-testing/llama-tokenizer \
+     --generate-plots
+   ```
+
+### Test Parameters
+- **Prompts**: 100 requests
+- **Input tokens**: 200 ± 20 tokens
+- **Output tokens**: 100 ± 10 tokens  
+- **Concurrency**: 10 concurrent users
+- **Results**: Displayed in terminal with performance metrics and plots
+
+The Triton container runs persistently, so you can run tests multiple times and view results immediately.
+
 ## Monitoring
 
 ```bash

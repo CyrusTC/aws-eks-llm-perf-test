@@ -107,10 +107,6 @@ resource "kubectl_manifest" "llm_gpu_deployment" {
       }
     }
   })
-  
-  timeouts {
-    create = "5m"
-  }
 
   depends_on = [
     kubectl_manifest.llm_namespace,
