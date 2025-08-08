@@ -169,6 +169,88 @@ The infrastructure includes a persistent Triton container for manual performance
 
 The Triton container runs persistently, so you can run multiple tests and compare results across different concurrency levels.
 
+### Automated Performance Testing Script
+
+For comprehensive testing across multiple concurrency levels, use this automated script:
+
+```bash
+#!/bin/bash
+
+# Configuration
+CONCURRENCY_LEVELS=(10 20 40 80 120 200)
+INSTANCE_SIZE="G5.8xlarge"
+INPUT_TOKEN_SIZE=200
+NUM_PROMPTS=100
+MODEL_NAME="openai/gpt-oss-20b"
+SERVICE_URL="http://llm-gpu.llm.svc.cluster.local:8000"
+
+echo "=== Automated Performance Testing ==="
+echo "Instance Size: $INSTANCE_SIZE"
+echo "Model: $MODEL_NAME"
+echo "Input Token Size: $INPUT_TOKEN_SIZE"
+echo "Number of Prompts: $NUM_PROMPTS"
+echo "Concurrency Levels: ${CONCURRENCY_LEVELS[@]}"
+echo "Started at: $(date)"
+echo "======================================="
+
+# Loop through concurrency levels
+for concurrency in "${CONCURRENCY_LEVELS[@]}"; do
+    echo ""
+    echo "🚀 Starting test: Concurrency $concurrency on $INSTANCE_SIZE"
+    echo "⏰ Test started at: $(date)"
+    
+    # Calculate prompts based on concurrency for better load distribution
+    test_prompts=$((NUM_PROMPTS * concurrency / 10))
+    
+    echo "📊 Test parameters:"
+    echo "   - Concurrency: $concurrency"
+    echo "   - Prompts: $test_prompts"
+    echo "   - Input tokens: $INPUT_TOKEN_SIZE ± 20"
+    echo "   - Output tokens: 100 ± 10"
+    
+    # Run genai-perf test
+    genai-perf profile -m $MODEL_NAME \
+        --url $SERVICE_URL \
+        --service-kind openai \
+        --endpoint-type completions \
+        --num-prompts $test_prompts \
+        --synthetic-input-tokens-mean $INPUT_TOKEN_SIZE \
+        --synthetic-input-tokens-stddev 20 \
+        --output-tokens-mean 100 \
+        --output-tokens-stddev 10 \
+        --concurrency $concurrency \
+        --tokenizer hf-internal-testing/llama-tokenizer \
+        --generate-plots
+    
+    echo "✅ Completed test: Concurrency $concurrency"
+    echo "⏰ Test completed at: $(date)"
+    echo "---"
+    
+    # Optional: Add delay between tests to allow system to stabilize
+    sleep 30
+done
+
+echo ""
+echo "🎉 All performance tests completed!"
+echo "⏰ Full test suite finished at: $(date)"
+echo "📁 Results saved in artifacts/ directory"
+```
+
+**Usage:**
+1. Access the Triton container: `kubectl exec -it deployment/triton-perf -n llm -- bash`
+2. Create the script: `nano perf_test_suite.sh`
+3. Copy the script content above
+4. Make executable: `chmod +x perf_test_suite.sh`
+5. Run: `./perf_test_suite.sh`
+
+**Script Features:**
+- **Configurable parameters** at the top for easy modification
+- **Automatic prompt scaling** based on concurrency level
+- **Detailed logging** with timestamps and test parameters
+- **Progress tracking** through the test suite
+- **Stabilization delays** between tests
+- **Results organization** in artifacts directory
+
 ## Performance Results
 
 ### Sample Test Results (G5.8xlarge - Concurrency 10)
