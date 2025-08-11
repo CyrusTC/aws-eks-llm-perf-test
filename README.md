@@ -6,43 +6,8 @@ Infrastructure for deploying and testing LLM performance on AWS EKS with GPU nod
 
 - **VPC**: 3 AZs with public/private subnets
 - **EKS Cluster**: Kubernetes 1.33 with Karpenter for GPU node provisioning
-- **GPU Nodes**: G5.8xlarge instances with NVIDIA A10G GPUs
+- **GPU Nodes**: G5 instances with NVIDIA A10G GPUs
 - **LLM Model**: GPT-OSS-20b served via vLLM
-
-## FlashAttention 3 Compatibility Issue
-
-### Problem
-
-GPT-OSS-20b model requires FlashAttention 3 support, causing this error on A10G GPUs:
-
-```
-AssertionError: Sinks are only supported in FlashAttention 3
-```
-
-### Solution
-
-Use Triton attention backend instead of FlashAttention by setting the environment variable:
-
-```bash
-VLLM_ATTENTION_BACKEND=TRITON_ATTN_VLLM_V1
-```
-
-This is implemented in the Terraform deployment configuration:
-
-```hcl
-command = [
-  "bash", "-c",
-  <<-EOT
-  uv venv --python 3.12 --seed && \
-  source .venv/bin/activate && \
-  uv pip install --pre vllm \
-    --extra-index-url https://wheels.vllm.ai/gpt-oss/ \
-    --extra-index-url https://download.pytorch.org/whl/nightly/cu128 \
-    --index-strategy unsafe-best-match && \
-  VLLM_ATTENTION_BACKEND=TRITON_ATTN_VLLM_V1 vllm serve openai/gpt-oss-20b --max_model 100000
-  EOT
-]
-```
 
 ## Deployment
 
@@ -77,76 +42,6 @@ The infrastructure includes a persistent Triton container for manual performance
    ```
 
 3. **Run performance tests by concurrency**:
-
-   **Concurrency 20 (Baseline)**:
-
-   ```bash
-   genai-perf profile -m openai/gpt-oss-20b \
-     --url http://llm-gpu.llm.svc.cluster.local:8000 \
-     --service-kind openai \
-     --endpoint-type completions \
-     --num-prompts 100 \
-     --synthetic-input-tokens-mean 200 \
-     --synthetic-input-tokens-stddev 20 \
-     --output-tokens-mean 100 \
-     --output-tokens-stddev 10 \
-     --concurrency 20 \
-     --tokenizer hf-internal-testing/llama-tokenizer \
-     --generate-plots
-   ```
-
-   **Concurrency 40 (Medium Load)**:
-
-   ```bash
-   genai-perf profile -m openai/gpt-oss-20b \
-     --url http://llm-gpu.llm.svc.cluster.local:8000 \
-     --service-kind openai \
-     --endpoint-type completions \
-     --num-prompts 200 \
-     --synthetic-input-tokens-mean 200 \
-     --synthetic-input-tokens-stddev 20 \
-     --output-tokens-mean 100 \
-     --output-tokens-stddev 10 \
-     --concurrency 40 \
-     --tokenizer hf-internal-testing/llama-tokenizer \
-     --generate-plots
-   ```
-
-   **Concurrency 80 (High Load)**:
-
-   ```bash
-   genai-perf profile -m openai/gpt-oss-20b \
-     --url http://llm-gpu.llm.svc.cluster.local:8000 \
-     --service-kind openai \
-     --endpoint-type completions \
-     --num-prompts 400 \
-     --synthetic-input-tokens-mean 200 \
-     --synthetic-input-tokens-stddev 20 \
-     --output-tokens-mean 100 \
-     --output-tokens-stddev 10 \
-     --concurrency 80 \
-     --tokenizer hf-internal-testing/llama-tokenizer \
-     --generate-plots
-   ```
-
-   **Concurrency 120 (Very High Load)**:
-
-   ```bash
-   genai-perf profile -m openai/gpt-oss-20b \
-     --url http://llm-gpu.llm.svc.cluster.local:8000 \
-     --service-kind openai \
-     --endpoint-type completions \
-     --num-prompts 600 \
-     --synthetic-input-tokens-mean 200 \
-     --synthetic-input-tokens-stddev 20 \
-     --output-tokens-mean 100 \
-     --output-tokens-stddev 10 \
-     --concurrency 120 \
-     --tokenizer hf-internal-testing/llama-tokenizer \
-     --generate-plots
-   ```
-
-   **Concurrency 200 (Maximum Load)**:
 
    ```bash
    genai-perf profile -m openai/gpt-oss-20b \
@@ -281,20 +176,21 @@ Performance testing across G5 instance types with GPT-OSS-20b model (200±20 inp
 
 ### Instance Specifications
 
-| Instance Type | GPUs | GPU Memory | vCPUs | RAM | Tensor Parallel | On-Demand Price (US East)* |
-|---------------|------|------------|-------|-----|-----------------|---------------------------|
-| G5.8xlarge    | 1x A10G | 24GB | 32 | 128GB | TP=0 | $2.448/hour |
-| G5.12xlarge   | 4x A10G | 96GB | 48 | 192GB | TP=4 | $5.672/hour |
-| G5.16xlarge   | 1x A10G | 24GB | 64 | 256GB | TP=0 | $4.352/hour |
-| G5.48xlarge   | 8x A10G | 192GB | 192 | 768GB | TP=4 | $16.288/hour |
+| Instance Type | GPUs    | GPU Memory | vCPUs | RAM   | Tensor Parallel | On-Demand Price (US East)\* |
+| ------------- | ------- | ---------- | ----- | ----- | --------------- | --------------------------- |
+| G5.8xlarge    | 1x A10G | 24GB       | 32    | 128GB | TP=0            | $2.448/hour                 |
+| G5.12xlarge   | 4x A10G | 96GB       | 48    | 192GB | TP=4            | $5.672/hour                 |
+| G5.16xlarge   | 1x A10G | 24GB       | 64    | 256GB | TP=0            | $4.352/hour                 |
+| G5.48xlarge   | 8x A10G | 192GB      | 192   | 768GB | TP=4            | $16.288/hour                |
 
-*AWS on-demand pricing as of August 2025
+\*AWS on-demand pricing as of August 2025
 
 ### Performance Summary by Instance Type
 
 #### G5.8xlarge (Single A10G - 24GB VRAM)
+
 | Concurrency | Req/sec | Tokens/sec | Avg Latency | P99 Latency |
-|-------------|---------|------------|-------------|-------------|
+| ----------- | ------- | ---------- | ----------- | ----------- |
 | 10          | 1.78    | 231        | 5.31s       | 11.48s      |
 | 20          | 3.51    | 448        | 5.23s       | 7.39s       |
 | 40          | 5.61    | 706        | 6.28s       | 10.87s      |
@@ -303,8 +199,9 @@ Performance testing across G5 instance types with GPT-OSS-20b model (200±20 inp
 | 200         | 6.31    | 789        | 16.83s      | 33.71s      |
 
 #### G5.12xlarge (4x A10G - 96GB VRAM, TP=4)
+
 | Concurrency | Req/sec | Tokens/sec | Avg Latency | P99 Latency |
-|-------------|---------|------------|-------------|-------------|
+| ----------- | ------- | ---------- | ----------- | ----------- |
 | 10          | 4.40    | 570        | 2.24s       | 9.49s       |
 | 20          | 9.25    | 1,193      | 2.12s       | 2.82s       |
 | 40          | 11.28   | 1,428      | 3.39s       | 4.95s       |
@@ -313,8 +210,9 @@ Performance testing across G5 instance types with GPT-OSS-20b model (200±20 inp
 | 200         | 14.81   | 1,891      | 8.97s       | 17.92s      |
 
 #### G5.16xlarge (Single A10G - 24GB VRAM)
+
 | Concurrency | Req/sec | Tokens/sec | Avg Latency | P99 Latency |
-|-------------|---------|------------|-------------|-------------|
+| ----------- | ------- | ---------- | ----------- | ----------- |
 | 10          | 1.75    | 221        | 5.54s       | 11.43s      |
 | 20          | 3.65    | 453        | 5.06s       | 7.61s       |
 | 40          | 5.65    | 706        | 6.16s       | 10.72s      |
@@ -323,8 +221,9 @@ Performance testing across G5 instance types with GPT-OSS-20b model (200±20 inp
 | 200         | 7.26    | 892        | 11.96s      | 25.82s      |
 
 #### G5.48xlarge (8x A10G - 192GB VRAM, TP=4)
+
 | Concurrency | Req/sec | Tokens/sec | Avg Latency | P99 Latency |
-|-------------|---------|------------|-------------|-------------|
+| ----------- | ------- | ---------- | ----------- | ----------- |
 | 10          | 6.14    | 781        | 1.61s       | 1.89s       |
 | 20          | 8.33    | 1,073      | 2.32s       | 2.83s       |
 | 40          | 10.41   | 1,307      | 3.64s       | 4.41s       |
@@ -336,25 +235,26 @@ Performance testing across G5 instance types with GPT-OSS-20b model (200±20 inp
 
 #### Peak Throughput Comparison (tokens/sec per dollar/hour)
 
-| Instance Type | Peak Tokens/sec | Cost/Hour | Tokens per $/Hour | Multi-Instance Alternative |
-|---------------|-----------------|-----------|-------------------|---------------------------|
-| G5.8xlarge    | 961 (C120)      | $2.448    | 392.6             | 6x instances = 5,766 tokens/sec @ $14.69/hour |
-| G5.12xlarge   | 1,910 (C120)    | $5.672    | 336.8             | Single-instance value |
-| G5.16xlarge   | 985 (C120)      | $4.352    | 226.3             | 4x instances = 3,940 tokens/sec @ $17.41/hour |
+| Instance Type | Peak Tokens/sec | Cost/Hour | Tokens per $/Hour | Multi-Instance Alternative                     |
+| ------------- | --------------- | --------- | ----------------- | ---------------------------------------------- |
+| G5.8xlarge    | 961 (C120)      | $2.448    | 392.6             | 6x instances = 5,766 tokens/sec @ $14.69/hour  |
+| G5.12xlarge   | 1,910 (C120)    | $5.672    | 336.8             | Single-instance value                          |
+| G5.16xlarge   | 985 (C120)      | $4.352    | 226.3             | 4x instances = 3,940 tokens/sec @ $17.41/hour  |
 | G5.48xlarge   | 1,401 (C80)     | $16.288   | 86.0              | 7x G5.8xlarge = 6,727 tokens/sec @ $17.14/hour |
 
 #### Low Latency Comparison (< 3s average latency)
 
 | Instance Type | Latency Config | Tokens/sec | Cost/Hour | Tokens per $/Hour |
-|---------------|---------------------|------------|-----------|-------------------|
-| G5.8xlarge    | 5.23s @ C20         | 448        | $2.448    | 183.0             |
-| G5.12xlarge   | 2.12s @ C20         | 1,193      | $5.672    | 210.4             |
-| G5.16xlarge   | 5.06s @ C20         | 453        | $4.352    | 104.1             |
-| G5.48xlarge   | 1.61s @ C10         | 781        | $16.288   | 47.9              |
+| ------------- | -------------- | ---------- | --------- | ----------------- |
+| G5.8xlarge    | 5.23s @ C20    | 448        | $2.448    | 183.0             |
+| G5.12xlarge   | 2.12s @ C20    | 1,193      | $5.672    | 210.4             |
+| G5.16xlarge   | 5.06s @ C20    | 453        | $4.352    | 104.1             |
+| G5.48xlarge   | 1.61s @ C10    | 781        | $16.288   | 47.9              |
 
 ### Key Performance Insights
 
 #### Scaling Efficiency
+
 - **Tensor Parallelism Impact**: TP=4 configurations show 2-3x latency improvement over single GPU
 - **Single GPU Plateau**: G5.8xlarge and G5.16xlarge peak around 8-10 req/sec
 - **Multi-GPU Scaling**: G5.12xlarge achieves highest absolute throughput (1,910 tokens/sec)
@@ -362,14 +262,17 @@ Performance testing across G5 instance types with GPT-OSS-20b model (200±20 inp
 #### Cost Optimization Strategies
 
 **For Maximum Throughput**:
+
 - **Cost-Effective**: 6x G5.8xlarge instances = 5,766 tokens/sec @ $14.69/hour (392.6 tokens per $/hour)
 - **Operational Simplicity**: 1x G5.12xlarge = 1,910 tokens/sec @ $5.67/hour (336.8 tokens per $/hour)
 
 **For Low Latency**:
+
 - **Value**: G5.12xlarge @ C20 = 2.12s latency, 210.4 tokens per $/hour
 - **Ultra-Low Latency**: G5.48xlarge @ C10 = 1.61s latency, 47.9 tokens per $/hour (3.4x more expensive)
 
 **Multi-Instance vs Single Large Instance**:
+
 - 7x G5.8xlarge delivers 4.8x more throughput than 1x G5.48xlarge at similar cost
 - G5.48xlarge only justified for ultra-low latency requirements (< 2s)
 - G5.12xlarge offers balance of performance, cost, and operational simplicity
