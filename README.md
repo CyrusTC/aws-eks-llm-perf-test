@@ -12,18 +12,23 @@ Infrastructure for deploying and testing LLM performance on AWS EKS with GPU nod
 ## FlashAttention 3 Compatibility Issue
 
 ### Problem
+
 GPT-OSS-20b model requires FlashAttention 3 support, causing this error on A10G GPUs:
+
 ```
 AssertionError: Sinks are only supported in FlashAttention 3
 ```
 
 ### Solution
+
 Use Triton attention backend instead of FlashAttention by setting the environment variable:
+
 ```bash
 VLLM_ATTENTION_BACKEND=TRITON_ATTN_VLLM_V1
 ```
 
 This is implemented in the Terraform deployment configuration:
+
 ```hcl
 command = [
   "bash", "-c",
@@ -53,11 +58,13 @@ The infrastructure includes a persistent Triton container for manual performance
 ### Running Performance Tests
 
 1. **Access the Triton container**:
+
    ```bash
    kubectl exec -it deployment/triton-perf -n llm -- bash
    ```
 
 2. **Run basic inference test**:
+
    ```bash
    curl -X POST http://llm-gpu.llm.svc.cluster.local:8000/v1/completions \
      -H "Content-Type: application/json" \
@@ -69,9 +76,10 @@ The infrastructure includes a persistent Triton container for manual performance
      }'
    ```
 
-3. **Run comprehensive performance tests by concurrency**:
+3. **Run performance tests by concurrency**:
 
    **Concurrency 20 (Baseline)**:
+
    ```bash
    genai-perf profile -m openai/gpt-oss-20b \
      --url http://llm-gpu.llm.svc.cluster.local:8000 \
@@ -88,6 +96,7 @@ The infrastructure includes a persistent Triton container for manual performance
    ```
 
    **Concurrency 40 (Medium Load)**:
+
    ```bash
    genai-perf profile -m openai/gpt-oss-20b \
      --url http://llm-gpu.llm.svc.cluster.local:8000 \
@@ -104,6 +113,7 @@ The infrastructure includes a persistent Triton container for manual performance
    ```
 
    **Concurrency 80 (High Load)**:
+
    ```bash
    genai-perf profile -m openai/gpt-oss-20b \
      --url http://llm-gpu.llm.svc.cluster.local:8000 \
@@ -120,6 +130,7 @@ The infrastructure includes a persistent Triton container for manual performance
    ```
 
    **Concurrency 120 (Very High Load)**:
+
    ```bash
    genai-perf profile -m openai/gpt-oss-20b \
      --url http://llm-gpu.llm.svc.cluster.local:8000 \
@@ -136,6 +147,7 @@ The infrastructure includes a persistent Triton container for manual performance
    ```
 
    **Concurrency 200 (Maximum Load)**:
+
    ```bash
    genai-perf profile -m openai/gpt-oss-20b \
      --url http://llm-gpu.llm.svc.cluster.local:8000 \
@@ -152,8 +164,9 @@ The infrastructure includes a persistent Triton container for manual performance
    ```
 
 ### Test Parameters by Concurrency Level
+
 | Concurrency | Prompts | Input Tokens | Output Tokens | Expected Duration |
-|-------------|---------|--------------|---------------|-------------------|
+| ----------- | ------- | ------------ | ------------- | ----------------- |
 | 20          | 100     | 200 ± 20     | 100 ± 10      | ~2-3 minutes      |
 | 40          | 200     | 200 ± 20     | 100 ± 10      | ~3-4 minutes      |
 | 80          | 400     | 200 ± 20     | 100 ± 10      | ~5-6 minutes      |
@@ -161,6 +174,7 @@ The infrastructure includes a persistent Triton container for manual performance
 | 200         | 1000    | 200 ± 20     | 100 ± 10      | ~10-12 minutes    |
 
 ### Key Metrics to Monitor
+
 - **Throughput**: Requests per second
 - **Latency**: P50, P95, P99 response times
 - **Token throughput**: Input/output tokens per second
@@ -171,7 +185,7 @@ The Triton container runs persistently, so you can run multiple tests and compar
 
 ### Automated Performance Testing Script
 
-For comprehensive testing across multiple concurrency levels, use this automated script:
+For testing across multiple concurrency levels, use this automated script:
 
 ```bash
 #!/bin/bash
@@ -179,6 +193,9 @@ For comprehensive testing across multiple concurrency levels, use this automated
 # Configuration
 CONCURRENCY_LEVELS=(10 20 40 80 120 200)
 INSTANCE_SIZE="G5.8xlarge"
+TP=4
+PP=0
+SHM="10Gi"
 INPUT_TOKEN_SIZE=200
 NUM_PROMPTS=100
 MODEL_NAME="openai/gpt-oss-20b"
@@ -186,6 +203,9 @@ SERVICE_URL="http://llm-gpu.llm.svc.cluster.local:8000"
 
 echo "=== Automated Performance Testing ==="
 echo "Instance Size: $INSTANCE_SIZE"
+echo "Tensor Parallel Size: $TP"
+echo "Pipeline Parallel Size: $PP"
+echo "SHM Memory Size: $SHM"
 echo "Model: $MODEL_NAME"
 echo "Input Token Size: $INPUT_TOKEN_SIZE"
 echo "Number of Prompts: $NUM_PROMPTS"
@@ -198,16 +218,16 @@ for concurrency in "${CONCURRENCY_LEVELS[@]}"; do
     echo ""
     echo "🚀 Starting test: Concurrency $concurrency on $INSTANCE_SIZE"
     echo "⏰ Test started at: $(date)"
-    
-    # Calculate prompts based on concurrency for better load distribution
+
+    # Calculate prompts based on concurrency for load distribution
     test_prompts=$((NUM_PROMPTS * concurrency / 10))
-    
+
     echo "📊 Test parameters:"
     echo "   - Concurrency: $concurrency"
     echo "   - Prompts: $test_prompts"
     echo "   - Input tokens: $INPUT_TOKEN_SIZE ± 20"
     echo "   - Output tokens: 100 ± 10"
-    
+
     # Run genai-perf test
     genai-perf profile -m $MODEL_NAME \
         --url $SERVICE_URL \
@@ -221,11 +241,11 @@ for concurrency in "${CONCURRENCY_LEVELS[@]}"; do
         --concurrency $concurrency \
         --tokenizer hf-internal-testing/llama-tokenizer \
         --generate-plots
-    
+
     echo "✅ Completed test: Concurrency $concurrency"
     echo "⏰ Test completed at: $(date)"
     echo "---"
-    
+
     # Optional: Add delay between tests to allow system to stabilize
     sleep 30
 done
@@ -237,6 +257,7 @@ echo "📁 Results saved in artifacts/ directory"
 ```
 
 **Usage:**
+
 1. Access the Triton container: `kubectl exec -it deployment/triton-perf -n llm -- bash`
 2. Create the script: `nano perf_test_suite.sh`
 3. Copy the script content above
@@ -244,6 +265,7 @@ echo "📁 Results saved in artifacts/ directory"
 5. Run: `./perf_test_suite.sh`
 
 **Script Features:**
+
 - **Configurable parameters** at the top for easy modification
 - **Automatic prompt scaling** based on concurrency level
 - **Detailed logging** with timestamps and test parameters
@@ -253,128 +275,104 @@ echo "📁 Results saved in artifacts/ directory"
 
 ## Performance Results
 
-### Sample Test Results (G5.8xlarge - Concurrency 10)
+### Multi-Instance Performance Analysis
 
-```
-                                   NVIDIA GenAI-Perf | LLM Metrics
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┓
-┃                         Statistic ┃      avg ┃    min ┃       max ┃      p99 ┃      p90 ┃      p75 ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━┩
-│              Request latency (ms) │ 5,043.38 │ 465.89 │ 10,071.94 │ 9,903.36 │ 8,738.60 │ 4,975.83 │
-│            Output sequence length │   124.18 │  12.00 │    285.00 │   193.88 │   143.60 │   134.00 │
-│             Input sequence length │   203.31 │ 155.00 │    255.00 │   247.63 │   228.60 │   215.50 │
-│ Output token throughput (per sec) │   236.62 │    N/A │       N/A │      N/A │      N/A │      N/A │
-│      Request throughput (per sec) │     1.91 │    N/A │       N/A │      N/A │      N/A │      N/A │
-└───────────────────────────────────┴──────────┴────────┴───────────┴──────────┴──────────┴──────────┘
-```
+Performance testing across G5 instance types with GPT-OSS-20b model (200±20 input tokens, 100±10 output tokens).
 
-### Sample Test Results (G5.8xlarge - Concurrency 20)
+### Instance Specifications
 
-```
-                                    NVIDIA GenAI-Perf | LLM Metrics
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┓
-┃                         Statistic ┃      avg ┃      min ┃      max ┃      p99 ┃      p90 ┃      p75 ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━┩
-│              Request latency (ms) │ 4,305.56 │ 2,064.23 │ 5,391.71 │ 5,345.23 │ 5,046.14 │ 4,645.27 │
-│            Output sequence length │   125.45 │    62.00 │   255.00 │   188.08 │   148.20 │   132.00 │
-│             Input sequence length │   202.12 │   151.00 │   255.00 │   248.62 │   231.00 │   212.50 │
-│ Output token throughput (per sec) │   554.70 │      N/A │      N/A │      N/A │      N/A │      N/A │
-│      Request throughput (per sec) │     4.42 │      N/A │      N/A │      N/A │      N/A │      N/A │
-└───────────────────────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
-```
+| Instance Type | GPUs | GPU Memory | vCPUs | RAM | Tensor Parallel | On-Demand Price (US East)* |
+|---------------|------|------------|-------|-----|-----------------|---------------------------|
+| G5.8xlarge    | 1x A10G | 24GB | 32 | 128GB | TP=0 | $2.448/hour |
+| G5.12xlarge   | 4x A10G | 96GB | 48 | 192GB | TP=4 | $5.672/hour |
+| G5.16xlarge   | 1x A10G | 24GB | 64 | 256GB | TP=0 | $4.352/hour |
+| G5.48xlarge   | 8x A10G | 192GB | 192 | 768GB | TP=4 | $16.288/hour |
 
-### Sample Test Results (G5.8xlarge - Concurrency 40)
+*AWS on-demand pricing as of August 2025
 
-```
-                                   NVIDIA GenAI-Perf | LLM Metrics
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┓
-┃                         Statistic ┃      avg ┃    min ┃       max ┃      p99 ┃      p90 ┃      p75 ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━┩
-│              Request latency (ms) │ 6,090.43 │ 384.13 │ 10,079.55 │ 9,274.37 │ 8,173.34 │ 7,191.06 │
-│            Output sequence length │   125.30 │   2.00 │    396.00 │   190.97 │   144.30 │   133.00 │
-│             Input sequence length │   202.69 │ 151.00 │    255.00 │   244.81 │   231.00 │   217.00 │
-│ Output token throughput (per sec) │   766.65 │    N/A │       N/A │      N/A │      N/A │      N/A │
-│      Request throughput (per sec) │     6.15 │    N/A │       N/A │      N/A │      N/A │      N/A │
-└───────────────────────────────────┴──────────┴────────┴───────────┴──────────┴──────────┴──────────┘
-```
+### Performance Summary by Instance Type
 
-### Sample Test Results (G5.8xlarge - Concurrency 80)
+#### G5.8xlarge (Single A10G - 24GB VRAM)
+| Concurrency | Req/sec | Tokens/sec | Avg Latency | P99 Latency |
+|-------------|---------|------------|-------------|-------------|
+| 10          | 1.78    | 231        | 5.31s       | 11.48s      |
+| 20          | 3.51    | 448        | 5.23s       | 7.39s       |
+| 40          | 5.61    | 706        | 6.28s       | 10.87s      |
+| 80          | 7.02    | 881        | 8.85s       | 16.47s      |
+| 120         | 7.88    | 961        | 9.26s       | 19.94s      |
+| 200         | 6.31    | 789        | 16.83s      | 33.71s      |
 
-```
-                                      NVIDIA GenAI-Perf | LLM Metrics
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
-┃                         Statistic ┃      avg ┃      min ┃       max ┃       p99 ┃       p90 ┃       p75 ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
-│              Request latency (ms) │ 9,580.24 │ 4,041.25 │ 21,567.38 │ 20,922.32 │ 17,528.76 │ 12,751.37 │
-│            Output sequence length │   126.02 │    75.00 │    596.00 │    221.45 │    144.50 │    132.25 │
-│             Input sequence length │   201.64 │   151.00 │    255.00 │    243.65 │    228.50 │    215.25 │
-│ Output token throughput (per sec) │   828.76 │      N/A │       N/A │       N/A │       N/A │       N/A │
-│      Request throughput (per sec) │     6.58 │      N/A │       N/A │       N/A │       N/A │       N/A │
-└───────────────────────────────────┴──────────┴──────────┴───────────┴───────────┴───────────┴───────────┘
-```
+#### G5.12xlarge (4x A10G - 96GB VRAM, TP=4)
+| Concurrency | Req/sec | Tokens/sec | Avg Latency | P99 Latency |
+|-------------|---------|------------|-------------|-------------|
+| 10          | 4.40    | 570        | 2.24s       | 9.49s       |
+| 20          | 9.25    | 1,193      | 2.12s       | 2.82s       |
+| 40          | 11.28   | 1,428      | 3.39s       | 4.95s       |
+| 80          | 12.80   | 1,609      | 5.50s       | 10.74s      |
+| 120         | 15.14   | 1,910      | 6.37s       | 13.21s      |
+| 200         | 14.81   | 1,891      | 8.97s       | 17.92s      |
 
-### Sample Test Results (G5.8xlarge - Concurrency 120)
+#### G5.16xlarge (Single A10G - 24GB VRAM)
+| Concurrency | Req/sec | Tokens/sec | Avg Latency | P99 Latency |
+|-------------|---------|------------|-------------|-------------|
+| 10          | 1.75    | 221        | 5.54s       | 11.43s      |
+| 20          | 3.65    | 453        | 5.06s       | 7.61s       |
+| 40          | 5.65    | 706        | 6.16s       | 10.72s      |
+| 80          | 7.07    | 896        | 8.67s       | 15.36s      |
+| 120         | 8.07    | 985        | 9.20s       | 20.33s      |
+| 200         | 7.26    | 892        | 11.96s      | 25.82s      |
 
-```
-                                      NVIDIA GenAI-Perf | LLM Metrics
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
-┃                         Statistic ┃      avg ┃      min ┃       max ┃       p99 ┃       p90 ┃       p75 ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
-│              Request latency (ms) │ 9,945.11 │ 5,875.81 │ 22,212.10 │ 19,997.09 │ 15,565.79 │ 11,282.18 │
-│            Output sequence length │   129.28 │    79.00 │    638.00 │    319.57 │    149.10 │    131.00 │
-│             Input sequence length │   200.88 │   139.00 │    255.00 │    243.21 │    229.00 │    215.00 │
-│ Output token throughput (per sec) │ 1,007.91 │      N/A │       N/A │       N/A │       N/A │       N/A │
-│      Request throughput (per sec) │     7.80 │      N/A │       N/A │       N/A │       N/A │       N/A │
-└───────────────────────────────────┴──────────┴──────────┴───────────┴───────────┴───────────┴───────────┘
-```
+#### G5.48xlarge (8x A10G - 192GB VRAM, TP=4)
+| Concurrency | Req/sec | Tokens/sec | Avg Latency | P99 Latency |
+|-------------|---------|------------|-------------|-------------|
+| 10          | 6.14    | 781        | 1.61s       | 1.89s       |
+| 20          | 8.33    | 1,073      | 2.32s       | 2.83s       |
+| 40          | 10.41   | 1,307      | 3.64s       | 4.41s       |
+| 80          | 11.25   | 1,401      | 6.48s       | 7.87s       |
+| 120         | 10.46   | 1,364      | 9.54s       | 12.06s      |
+| 200         | 9.08    | 1,149      | 16.97s      | 23.41s      |
 
-### Sample Test Results (G5.8xlarge - Concurrency 200)
+### Price-to-Performance Analysis
 
-```
-                                      NVIDIA GenAI-Perf | LLM Metrics
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
-┃                         Statistic ┃       avg ┃      min ┃       max ┃       p99 ┃       p90 ┃       p75 ┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
-│              Request latency (ms) │ 17,846.00 │ 5,862.05 │ 30,787.32 │ 30,231.19 │ 22,843.58 │ 18,836.35 │
-│            Output sequence length │    125.66 │    26.00 │    436.00 │    244.40 │    144.00 │    133.00 │
-│             Input sequence length │    200.98 │   151.00 │    255.00 │    246.40 │    229.00 │    215.00 │
-│ Output token throughput (per sec) │    771.25 │      N/A │       N/A │       N/A │       N/A │       N/A │
-│      Request throughput (per sec) │      6.14 │      N/A │       N/A │       N/A │       N/A │       N/A │
-└───────────────────────────────────┴───────────┴──────────┴───────────┴───────────┴───────────┴───────────┘
-```
+#### Peak Throughput Comparison (tokens/sec per dollar/hour)
+
+| Instance Type | Peak Tokens/sec | Cost/Hour | Tokens per $/Hour | Multi-Instance Alternative |
+|---------------|-----------------|-----------|-------------------|---------------------------|
+| G5.8xlarge    | 961 (C120)      | $2.448    | 392.6             | 6x instances = 5,766 tokens/sec @ $14.69/hour |
+| G5.12xlarge   | 1,910 (C120)    | $5.672    | 336.8             | Single-instance value |
+| G5.16xlarge   | 985 (C120)      | $4.352    | 226.3             | 4x instances = 3,940 tokens/sec @ $17.41/hour |
+| G5.48xlarge   | 1,401 (C80)     | $16.288   | 86.0              | 7x G5.8xlarge = 6,727 tokens/sec @ $17.14/hour |
+
+#### Low Latency Comparison (< 3s average latency)
+
+| Instance Type | Latency Config | Tokens/sec | Cost/Hour | Tokens per $/Hour |
+|---------------|---------------------|------------|-----------|-------------------|
+| G5.8xlarge    | 5.23s @ C20         | 448        | $2.448    | 183.0             |
+| G5.12xlarge   | 2.12s @ C20         | 1,193      | $5.672    | 210.4             |
+| G5.16xlarge   | 5.06s @ C20         | 453        | $4.352    | 104.1             |
+| G5.48xlarge   | 1.61s @ C10         | 781        | $16.288   | 47.9              |
 
 ### Key Performance Insights
 
-**Hardware**: G5.8xlarge (NVIDIA A10G, 24GB VRAM, 32 vCPUs, 128 GiB RAM)
+#### Scaling Efficiency
+- **Tensor Parallelism Impact**: TP=4 configurations show 2-3x latency improvement over single GPU
+- **Single GPU Plateau**: G5.8xlarge and G5.16xlarge peak around 8-10 req/sec
+- **Multi-GPU Scaling**: G5.12xlarge achieves highest absolute throughput (1,910 tokens/sec)
 
-**Complete Performance Scaling Analysis**:
+#### Cost Optimization Strategies
 
-| Concurrency | Req/sec | Tokens/sec | Avg Latency | P99 Latency | Optimal Use Case |
-|-------------|---------|------------|-------------|-------------|------------------|
-| 10          | 1.91    | 236.62     | 5.04s       | 9.90s       | Development/Testing |
-| 20          | 4.42    | 554.70     | 4.31s       | 5.35s       | **Production (Low Latency)** |
-| 40          | 6.15    | 766.65     | 6.09s       | 9.27s       | Balanced Workloads |
-| 80          | 6.58    | 828.76     | 9.58s       | 20.92s      | Avoid (Poor Efficiency) |
-| 120         | 7.80    | 1,007.91   | 9.95s       | 20.00s      | **Maximum Throughput** |
-| 200         | 6.14    | 771.25     | 17.85s      | 30.23s      | Over-Saturated |
+**For Maximum Throughput**:
+- **Cost-Effective**: 6x G5.8xlarge instances = 5,766 tokens/sec @ $14.69/hour (392.6 tokens per $/hour)
+- **Operational Simplicity**: 1x G5.12xlarge = 1,910 tokens/sec @ $5.67/hour (336.8 tokens per $/hour)
 
-**Key Findings**:
-- **Optimal Latency**: Concurrency 20 (4.31s avg, 5.35s P99)
-- **Peak Throughput**: Concurrency 120 (1,008 tokens/sec, 7.8 req/sec)
-- **Saturation Point**: Beyond C120, performance degrades significantly
-- **Production Sweet Spot**: C20-40 for most real-world applications
+**For Low Latency**:
+- **Value**: G5.12xlarge @ C20 = 2.12s latency, 210.4 tokens per $/hour
+- **Ultra-Low Latency**: G5.48xlarge @ C10 = 1.61s latency, 47.9 tokens per $/hour (3.4x more expensive)
 
-**Generated Artifacts**:
-- Performance metrics: `profile_export_genai_perf.json`
-- CSV data: `profile_export_genai_perf.csv`
-- Visualization plots: Time to First Token, Request Latency, Token distributions
-
-### Expected Performance Scaling
-As concurrency increases, expect:
-- **Higher throughput** (more requests/sec)
-- **Increased latency** (longer response times)
-- **Resource saturation** at concurrency 120-200
-- **Potential timeouts** under maximum load
+**Multi-Instance vs Single Large Instance**:
+- 7x G5.8xlarge delivers 4.8x more throughput than 1x G5.48xlarge at similar cost
+- G5.48xlarge only justified for ultra-low latency requirements (< 2s)
+- G5.12xlarge offers balance of performance, cost, and operational simplicity
 
 ## Hardware Specifications
 

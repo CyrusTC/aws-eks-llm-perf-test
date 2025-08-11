@@ -10,10 +10,7 @@ resource "kubectl_manifest" "llm_gpu_nodepool" {
     spec = {
       template = {
         metadata = {
-          labels = {
-            owner        = "llm-team"
-            instanceType = "gpu"
-          }
+          # Remove custom labels that cause issues with EKS Auto Mode
         }
         spec = {
           nodeClassRef = {
@@ -35,6 +32,11 @@ resource "kubectl_manifest" "llm_gpu_nodepool" {
               values   = ["g5"]
             },
             {
+              key      = "eks.amazonaws.com/instance-size"
+              operator = "In"
+              values   = ["48xlarge"]
+            },
+            {
               key      = "kubernetes.io/arch"
               operator = "In"
               values   = ["amd64"]
@@ -42,7 +44,7 @@ resource "kubectl_manifest" "llm_gpu_nodepool" {
             {
               key      = "karpenter.sh/capacity-type"
               operator = "In"
-              values   = ["spot", "on-demand"]
+              values   = ["on-demand"]
             }
           ]
         }

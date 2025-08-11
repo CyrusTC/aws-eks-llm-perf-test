@@ -1,0 +1,213 @@
+=== Automated Performance Testing ===
+Instance Size: G5.12xlarge
+Tensor Parallel Size: 4
+Pipeline Parallel Size: 0
+SHM: 10GB
+Model: openai/gpt-oss-20b
+Input Token Size: 200
+Number of Prompts: 100
+Concurrency Levels: 10 20 40 80 120 200
+Started at: Sun Aug 10 16:20:45 UTC 2025
+=======================================
+
+🚀 Starting test: Concurrency 10 on G5.12xlarge
+⏰ Test started at: Sun Aug 10 16:20:45 UTC 2025
+📊 Test parameters:
+   - Concurrency: 10
+   - Prompts: 100
+   - Input tokens: 200 ± 20
+   - Output tokens: 100 ± 10
+2025-08-10 16:20 [INFO] genai_perf.parser:111 - Profiling these models: openai/gpt-oss-20b
+2025-08-10 16:20 [INFO] genai_perf.parser:335 - Model name 'openai/gpt-oss-20b' cannot be used to create artifact directory. Instead, 'openai_gpt-oss-20b' will be used.
+2025-08-10 16:20 [INFO] genai_perf.wrapper:164 - Running Perf Analyzer : 'perf_analyzer -m openai/gpt-oss-20b --async --input-data artifacts/openai_gpt-oss-20b-openai-completions-concurrency10/inputs.json -i http --concurrency-range 10 --endpoint v1/completions --service-kind openai -u http://llm-gpu.llm.svc.cluster.local:8000 --request-count 0 --warmup-request-count 0 --measurement-interval 10000 --stability-percentage 999 --profile-export-file artifacts/openai_gpt-oss-20b-openai-completions-concurrency10/profile_export.json'
+                                   NVIDIA GenAI-Perf | LLM Metrics
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┓
+┃                         Statistic ┃      avg ┃    min ┃      max ┃      p99 ┃      p90 ┃      p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━┩
+│              Request latency (ms) │ 2,237.24 │ 331.11 │ 9,676.37 │ 9,488.27 │ 2,218.71 │ 1,986.64 │
+│            Output sequence length │   129.53 │  25.00 │   345.00 │   287.69 │   148.30 │   134.00 │
+│             Input sequence length │   202.11 │ 151.00 │   255.00 │   248.73 │   228.00 │   213.00 │
+│ Output token throughput (per sec) │   569.86 │    N/A │      N/A │      N/A │      N/A │      N/A │
+│      Request throughput (per sec) │     4.40 │    N/A │      N/A │      N/A │      N/A │      N/A │
+└───────────────────────────────────┴──────────┴────────┴──────────┴──────────┴──────────┴──────────┘
+2025-08-10 16:21 [INFO] genai_perf.export_data.json_exporter:62 - Generating artifacts/openai_gpt-oss-20b-openai-completions-concurrency10/profile_export_genai_perf.json
+2025-08-10 16:21 [INFO] genai_perf.export_data.csv_exporter:71 - Generating artifacts/openai_gpt-oss-20b-openai-completions-concurrency10/profile_export_genai_perf.csv
+2025-08-10 16:21 [INFO] genai_perf.plots.plot_config_parser:208 - Creating initial YAML configuration file to artifacts/openai_gpt-oss-20b-openai-completions-concurrency10/plots/config.yaml
+2025-08-10 16:21 [INFO] genai_perf.plots.plot_config_parser:53 - Generating plot configurations by parsing artifacts/openai_gpt-oss-20b-openai-completions-concurrency10/plots/config.yaml. This may take a few seconds.
+2025-08-10 16:21 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Time to First Token' plot
+2025-08-10 16:21 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Request Latency' plot
+2025-08-10 16:21 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Distribution of Input Sequence Lengths to Output Sequence Lengths' plot
+2025-08-10 16:21 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Time to First Token vs Input Sequence Lengths' plot
+2025-08-10 16:21 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Token-to-Token Latency vs Output Token Position' plot
+✅ Completed test: Concurrency 10
+⏰ Test completed at: Sun Aug 10 16:21:26 UTC 2025
+---
+
+🚀 Starting test: Concurrency 20 on G5.12xlarge
+⏰ Test started at: Sun Aug 10 16:21:56 UTC 2025
+📊 Test parameters:
+   - Concurrency: 20
+   - Prompts: 200
+   - Input tokens: 200 ± 20
+   - Output tokens: 100 ± 10
+2025-08-10 16:21 [INFO] genai_perf.parser:111 - Profiling these models: openai/gpt-oss-20b
+2025-08-10 16:21 [INFO] genai_perf.parser:335 - Model name 'openai/gpt-oss-20b' cannot be used to create artifact directory. Instead, 'openai_gpt-oss-20b' will be used.
+2025-08-10 16:21 [INFO] genai_perf.wrapper:164 - Running Perf Analyzer : 'perf_analyzer -m openai/gpt-oss-20b --async --input-data artifacts/openai_gpt-oss-20b-openai-completions-concurrency20/inputs.json -i http --concurrency-range 20 --endpoint v1/completions --service-kind openai -u http://llm-gpu.llm.svc.cluster.local:8000 --request-count 0 --warmup-request-count 0 --measurement-interval 10000 --stability-percentage 999 --profile-export-file artifacts/openai_gpt-oss-20b-openai-completions-concurrency20/profile_export.json'
+                                   NVIDIA GenAI-Perf | LLM Metrics
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┓
+┃                         Statistic ┃      avg ┃    min ┃      max ┃      p99 ┃      p90 ┃      p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━┩
+│              Request latency (ms) │ 2,115.94 │ 135.15 │ 2,858.28 │ 2,822.11 │ 2,493.66 │ 2,316.86 │
+│            Output sequence length │   128.92 │   4.00 │   703.00 │   300.76 │   150.00 │   136.00 │
+│             Input sequence length │   201.89 │ 151.00 │   255.00 │   244.00 │   228.00 │   217.00 │
+│ Output token throughput (per sec) │ 1,192.64 │    N/A │      N/A │      N/A │      N/A │      N/A │
+│      Request throughput (per sec) │     9.25 │    N/A │      N/A │      N/A │      N/A │      N/A │
+└───────────────────────────────────┴──────────┴────────┴──────────┴──────────┴──────────┴──────────┘
+2025-08-10 16:22 [INFO] genai_perf.export_data.json_exporter:62 - Generating artifacts/openai_gpt-oss-20b-openai-completions-concurrency20/profile_export_genai_perf.json
+2025-08-10 16:22 [INFO] genai_perf.export_data.csv_exporter:71 - Generating artifacts/openai_gpt-oss-20b-openai-completions-concurrency20/profile_export_genai_perf.csv
+2025-08-10 16:22 [INFO] genai_perf.plots.plot_config_parser:208 - Creating initial YAML configuration file to artifacts/openai_gpt-oss-20b-openai-completions-concurrency20/plots/config.yaml
+2025-08-10 16:22 [INFO] genai_perf.plots.plot_config_parser:53 - Generating plot configurations by parsing artifacts/openai_gpt-oss-20b-openai-completions-concurrency20/plots/config.yaml. This may take a few seconds.
+2025-08-10 16:22 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Time to First Token' plot
+2025-08-10 16:22 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Request Latency' plot
+2025-08-10 16:22 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Distribution of Input Sequence Lengths to Output Sequence Lengths' plot
+2025-08-10 16:22 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Time to First Token vs Input Sequence Lengths' plot
+2025-08-10 16:22 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Token-to-Token Latency vs Output Token Position' plot
+✅ Completed test: Concurrency 20
+⏰ Test completed at: Sun Aug 10 16:22:41 UTC 2025
+---
+
+🚀 Starting test: Concurrency 40 on G5.12xlarge
+⏰ Test started at: Sun Aug 10 16:23:11 UTC 2025
+📊 Test parameters:
+   - Concurrency: 40
+   - Prompts: 400
+   - Input tokens: 200 ± 20
+   - Output tokens: 100 ± 10
+2025-08-10 16:23 [INFO] genai_perf.parser:111 - Profiling these models: openai/gpt-oss-20b
+2025-08-10 16:23 [INFO] genai_perf.parser:335 - Model name 'openai/gpt-oss-20b' cannot be used to create artifact directory. Instead, 'openai_gpt-oss-20b' will be used.
+2025-08-10 16:23 [INFO] genai_perf.wrapper:164 - Running Perf Analyzer : 'perf_analyzer -m openai/gpt-oss-20b --async --input-data artifacts/openai_gpt-oss-20b-openai-completions-concurrency40/inputs.json -i http --concurrency-range 40 --endpoint v1/completions --service-kind openai -u http://llm-gpu.llm.svc.cluster.local:8000 --request-count 0 --warmup-request-count 0 --measurement-interval 10000 --stability-percentage 999 --profile-export-file artifacts/openai_gpt-oss-20b-openai-completions-concurrency40/profile_export.json'
+                                   NVIDIA GenAI-Perf | LLM Metrics
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┓
+┃                         Statistic ┃      avg ┃    min ┃      max ┃      p99 ┃      p90 ┃      p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━┩
+│              Request latency (ms) │ 3,393.48 │ 519.75 │ 5,727.19 │ 4,945.84 │ 4,432.83 │ 3,878.28 │
+│            Output sequence length │   126.60 │  25.00 │   611.00 │   213.00 │   145.00 │   133.00 │
+│             Input sequence length │   200.35 │ 139.00 │   255.00 │   243.95 │   225.00 │   215.00 │
+│ Output token throughput (per sec) │ 1,427.79 │    N/A │      N/A │      N/A │      N/A │      N/A │
+│      Request throughput (per sec) │    11.28 │    N/A │      N/A │      N/A │      N/A │      N/A │
+└───────────────────────────────────┴──────────┴────────┴──────────┴──────────┴──────────┴──────────┘
+2025-08-10 16:23 [INFO] genai_perf.export_data.json_exporter:62 - Generating artifacts/openai_gpt-oss-20b-openai-completions-concurrency40/profile_export_genai_perf.json
+2025-08-10 16:23 [INFO] genai_perf.export_data.csv_exporter:71 - Generating artifacts/openai_gpt-oss-20b-openai-completions-concurrency40/profile_export_genai_perf.csv
+2025-08-10 16:23 [INFO] genai_perf.plots.plot_config_parser:208 - Creating initial YAML configuration file to artifacts/openai_gpt-oss-20b-openai-completions-concurrency40/plots/config.yaml
+2025-08-10 16:23 [INFO] genai_perf.plots.plot_config_parser:53 - Generating plot configurations by parsing artifacts/openai_gpt-oss-20b-openai-completions-concurrency40/plots/config.yaml. This may take a few seconds.
+2025-08-10 16:23 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Time to First Token' plot
+2025-08-10 16:23 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Request Latency' plot
+2025-08-10 16:23 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Distribution of Input Sequence Lengths to Output Sequence Lengths' plot
+2025-08-10 16:23 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Time to First Token vs Input Sequence Lengths' plot
+2025-08-10 16:23 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Token-to-Token Latency vs Output Token Position' plot
+✅ Completed test: Concurrency 40
+⏰ Test completed at: Sun Aug 10 16:23:56 UTC 2025
+---
+
+🚀 Starting test: Concurrency 80 on G5.12xlarge
+⏰ Test started at: Sun Aug 10 16:24:26 UTC 2025
+📊 Test parameters:
+   - Concurrency: 80
+   - Prompts: 800
+   - Input tokens: 200 ± 20
+   - Output tokens: 100 ± 10
+2025-08-10 16:24 [INFO] genai_perf.parser:111 - Profiling these models: openai/gpt-oss-20b
+2025-08-10 16:24 [INFO] genai_perf.parser:335 - Model name 'openai/gpt-oss-20b' cannot be used to create artifact directory. Instead, 'openai_gpt-oss-20b' will be used.
+2025-08-10 16:24 [INFO] genai_perf.wrapper:164 - Running Perf Analyzer : 'perf_analyzer -m openai/gpt-oss-20b --async --input-data artifacts/openai_gpt-oss-20b-openai-completions-concurrency80/inputs.json -i http --concurrency-range 80 --endpoint v1/completions --service-kind openai -u http://llm-gpu.llm.svc.cluster.local:8000 --request-count 0 --warmup-request-count 0 --measurement-interval 10000 --stability-percentage 999 --profile-export-file artifacts/openai_gpt-oss-20b-openai-completions-concurrency80/profile_export.json'
+                                    NVIDIA GenAI-Perf | LLM Metrics
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┓
+┃                         Statistic ┃      avg ┃    min ┃       max ┃       p99 ┃      p90 ┃      p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━┩
+│              Request latency (ms) │ 5,497.96 │ 373.97 │ 12,544.08 │ 10,737.70 │ 9,142.21 │ 6,029.44 │
+│            Output sequence length │   125.69 │   4.00 │    605.00 │    263.40 │   142.00 │   132.00 │
+│             Input sequence length │   200.37 │ 139.00 │    255.00 │    244.44 │   225.40 │   214.00 │
+│ Output token throughput (per sec) │ 1,609.01 │    N/A │       N/A │       N/A │      N/A │      N/A │
+│      Request throughput (per sec) │    12.80 │    N/A │       N/A │       N/A │      N/A │      N/A │
+└───────────────────────────────────┴──────────┴────────┴───────────┴───────────┴──────────┴──────────┘
+2025-08-10 16:25 [INFO] genai_perf.export_data.json_exporter:62 - Generating artifacts/openai_gpt-oss-20b-openai-completions-concurrency80/profile_export_genai_perf.json
+2025-08-10 16:25 [INFO] genai_perf.export_data.csv_exporter:71 - Generating artifacts/openai_gpt-oss-20b-openai-completions-concurrency80/profile_export_genai_perf.csv
+2025-08-10 16:25 [INFO] genai_perf.plots.plot_config_parser:208 - Creating initial YAML configuration file to artifacts/openai_gpt-oss-20b-openai-completions-concurrency80/plots/config.yaml
+2025-08-10 16:25 [INFO] genai_perf.plots.plot_config_parser:53 - Generating plot configurations by parsing artifacts/openai_gpt-oss-20b-openai-completions-concurrency80/plots/config.yaml. This may take a few seconds.
+2025-08-10 16:25 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Time to First Token' plot
+2025-08-10 16:25 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Request Latency' plot
+2025-08-10 16:25 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Distribution of Input Sequence Lengths to Output Sequence Lengths' plot
+2025-08-10 16:25 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Time to First Token vs Input Sequence Lengths' plot
+2025-08-10 16:25 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Token-to-Token Latency vs Output Token Position' plot
+✅ Completed test: Concurrency 80
+⏰ Test completed at: Sun Aug 10 16:25:14 UTC 2025
+---
+
+🚀 Starting test: Concurrency 120 on G5.12xlarge
+⏰ Test started at: Sun Aug 10 16:25:44 UTC 2025
+📊 Test parameters:
+   - Concurrency: 120
+   - Prompts: 1200
+   - Input tokens: 200 ± 20
+   - Output tokens: 100 ± 10
+2025-08-10 16:25 [INFO] genai_perf.parser:111 - Profiling these models: openai/gpt-oss-20b
+2025-08-10 16:25 [INFO] genai_perf.parser:335 - Model name 'openai/gpt-oss-20b' cannot be used to create artifact directory. Instead, 'openai_gpt-oss-20b' will be used.
+2025-08-10 16:25 [INFO] genai_perf.wrapper:164 - Running Perf Analyzer : 'perf_analyzer -m openai/gpt-oss-20b --async --input-data artifacts/openai_gpt-oss-20b-openai-completions-concurrency120/inputs.json -i http --concurrency-range 120 --endpoint v1/completions --service-kind openai -u http://llm-gpu.llm.svc.cluster.local:8000 --request-count 0 --warmup-request-count 0 --measurement-interval 10000 --stability-percentage 999 --profile-export-file artifacts/openai_gpt-oss-20b-openai-completions-concurrency120/profile_export.json'
+                                     NVIDIA GenAI-Perf | LLM Metrics
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┓
+┃                         Statistic ┃      avg ┃      min ┃       max ┃       p99 ┃      p90 ┃      p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━┩
+│              Request latency (ms) │ 6,371.57 │ 2,059.68 │ 14,674.33 │ 13,208.98 │ 9,844.57 │ 6,479.08 │
+│            Output sequence length │   126.16 │    43.00 │    707.00 │    253.40 │   145.00 │   132.00 │
+│             Input sequence length │   201.05 │   139.00 │    257.00 │    248.00 │   228.00 │   215.00 │
+│ Output token throughput (per sec) │ 1,910.07 │      N/A │       N/A │       N/A │      N/A │      N/A │
+│      Request throughput (per sec) │    15.14 │      N/A │       N/A │       N/A │      N/A │      N/A │
+└───────────────────────────────────┴──────────┴──────────┴───────────┴───────────┴──────────┴──────────┘
+2025-08-10 16:26 [INFO] genai_perf.export_data.json_exporter:62 - Generating artifacts/openai_gpt-oss-20b-openai-completions-concurrency120/profile_export_genai_perf.json
+2025-08-10 16:26 [INFO] genai_perf.export_data.csv_exporter:71 - Generating artifacts/openai_gpt-oss-20b-openai-completions-concurrency120/profile_export_genai_perf.csv
+2025-08-10 16:26 [INFO] genai_perf.plots.plot_config_parser:208 - Creating initial YAML configuration file to artifacts/openai_gpt-oss-20b-openai-completions-concurrency120/plots/config.yaml
+2025-08-10 16:26 [INFO] genai_perf.plots.plot_config_parser:53 - Generating plot configurations by parsing artifacts/openai_gpt-oss-20b-openai-completions-concurrency120/plots/config.yaml. This may take a few seconds.
+2025-08-10 16:26 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Time to First Token' plot
+2025-08-10 16:26 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Request Latency' plot
+2025-08-10 16:26 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Distribution of Input Sequence Lengths to Output Sequence Lengths' plot
+2025-08-10 16:26 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Time to First Token vs Input Sequence Lengths' plot
+2025-08-10 16:26 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Token-to-Token Latency vs Output Token Position' plot
+✅ Completed test: Concurrency 120
+⏰ Test completed at: Sun Aug 10 16:26:34 UTC 2025
+---
+
+🚀 Starting test: Concurrency 200 on G5.12xlarge
+⏰ Test started at: Sun Aug 10 16:27:04 UTC 2025
+📊 Test parameters:
+   - Concurrency: 200
+   - Prompts: 2000
+   - Input tokens: 200 ± 20
+   - Output tokens: 100 ± 10
+2025-08-10 16:27 [INFO] genai_perf.parser:111 - Profiling these models: openai/gpt-oss-20b
+2025-08-10 16:27 [INFO] genai_perf.parser:335 - Model name 'openai/gpt-oss-20b' cannot be used to create artifact directory. Instead, 'openai_gpt-oss-20b' will be used.
+2025-08-10 16:27 [INFO] genai_perf.wrapper:164 - Running Perf Analyzer : 'perf_analyzer -m openai/gpt-oss-20b --async --input-data artifacts/openai_gpt-oss-20b-openai-completions-concurrency200/inputs.json -i http --concurrency-range 200 --endpoint v1/completions --service-kind openai -u http://llm-gpu.llm.svc.cluster.local:8000 --request-count 0 --warmup-request-count 0 --measurement-interval 10000 --stability-percentage 999 --profile-export-file artifacts/openai_gpt-oss-20b-openai-completions-concurrency200/profile_export.json'
+                                     NVIDIA GenAI-Perf | LLM Metrics
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━┓
+┃                         Statistic ┃      avg ┃      min ┃       max ┃       p99 ┃       p90 ┃      p75 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━┩
+│              Request latency (ms) │ 8,973.82 │ 1,044.00 │ 19,681.42 │ 17,924.20 │ 10,633.29 │ 9,403.79 │
+│            Output sequence length │   127.71 │     8.00 │    701.00 │    279.62 │    147.00 │   133.00 │
+│             Input sequence length │   200.55 │   139.00 │    256.00 │    245.71 │    227.10 │   214.75 │
+│ Output token throughput (per sec) │ 1,891.28 │      N/A │       N/A │       N/A │       N/A │      N/A │
+│      Request throughput (per sec) │    14.81 │      N/A │       N/A │       N/A │       N/A │      N/A │
+└───────────────────────────────────┴──────────┴──────────┴───────────┴───────────┴───────────┴──────────┘
+2025-08-10 16:27 [INFO] genai_perf.export_data.json_exporter:62 - Generating artifacts/openai_gpt-oss-20b-openai-completions-concurrency200/profile_export_genai_perf.json
+2025-08-10 16:27 [INFO] genai_perf.export_data.csv_exporter:71 - Generating artifacts/openai_gpt-oss-20b-openai-completions-concurrency200/profile_export_genai_perf.csv
+2025-08-10 16:27 [INFO] genai_perf.plots.plot_config_parser:208 - Creating initial YAML configuration file to artifacts/openai_gpt-oss-20b-openai-completions-concurrency200/plots/config.yaml
+2025-08-10 16:27 [INFO] genai_perf.plots.plot_config_parser:53 - Generating plot configurations by parsing artifacts/openai_gpt-oss-20b-openai-completions-concurrency200/plots/config.yaml. This may take a few seconds.
+2025-08-10 16:28 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Time to First Token' plot
+2025-08-10 16:28 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Request Latency' plot
+2025-08-10 16:28 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Distribution of Input Sequence Lengths to Output Sequence Lengths' plot
+2025-08-10 16:28 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Time to First Token vs Input Sequence Lengths' plot
+2025-08-10 16:28 [INFO] genai_perf.plots.plot_manager:53 - Generating 'Token-to-Token Latency vs Output Token Position' plot
+✅ Completed test: Concurrency 200
+⏰ Test completed at: Sun Aug 10 16:28:01 UTC 2025
+---
+
+🎉 All performance tests completed!
+⏰ Full test suite finished at: Sun Aug 10 16:28:31 UTC 2025
+📁 Results saved in artifacts/ directory

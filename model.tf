@@ -39,10 +39,7 @@ resource "kubectl_manifest" "llm_gpu_deployment" {
           }
         }
         spec = {
-          nodeSelector = {
-            owner        = "llm-team"
-            instanceType = "gpu"
-          }
+          # nodeSelector removed - let Karpenter provision based on resource requirements
           tolerations = [
             {
               key      = "nvidia.com/gpu"
@@ -64,8 +61,27 @@ resource "kubectl_manifest" "llm_gpu_deployment" {
                   --extra-index-url https://wheels.vllm.ai/gpt-oss/ \
                   --extra-index-url https://download.pytorch.org/whl/nightly/cu128 \
                   --index-strategy unsafe-best-match && \
-                VLLM_ATTENTION_BACKEND=TRITON_ATTN_VLLM_V1 vllm serve ${var.llm_model} --max_model 100000
+                VLLM_ATTENTION_BACKEND=TRITON_ATTN_VLLM_V1 vllm serve ${var.llm_model} --tensor-parallel-size 8 --max_model 100000
+                # VLLM_ATTENTION_BACKEND=TRITON_ATTN_VLLM_V1 vllm serve ${var.llm_model} --tensor-parallel-size 2 --pipeline-parallel-size 2 --max_model 100000
                 EOT
+              ]
+              env = [
+                {
+                  name  = "NCCL_DEBUG"
+                  value = "INFO"
+                },
+                {
+                  name  = "NCCL_IB_DISABLE"
+                  value = "1"
+                },
+                {
+                  name  = "NCCL_P2P_DISABLE"
+                  value = "1"
+                },
+                {
+                  name  = "CUDA_VISIBLE_DEVICES"
+                  value = "0,1,2,3,4,5,6,7"
+                }
               ]
               ports = [
                 {
@@ -73,16 +89,22 @@ resource "kubectl_manifest" "llm_gpu_deployment" {
                   protocol      = "TCP"
                 }
               ]
+              volumeMounts = [
+                {
+                  name      = "shm"
+                  mountPath = "/dev/shm"
+                }
+              ]
               resources = {
                 limits = {
-                  cpu              = "32"
-                  memory           = "100Gi"
-                  "nvidia.com/gpu" = "1"
+                  cpu              = "40"
+                  memory           = "160Gi"
+                  "nvidia.com/gpu" = "8"
                 }
                 requests = {
-                  cpu              = "16"
-                  memory           = "30Gi"
-                  "nvidia.com/gpu" = "1"
+                  cpu              = "40"
+                  memory           = "160Gi"
+                  "nvidia.com/gpu" = "8"
                 }
               }
               livenessProbe = {
@@ -100,6 +122,15 @@ resource "kubectl_manifest" "llm_gpu_deployment" {
                 }
                 initialDelaySeconds = 300
                 periodSeconds       = 5
+              }
+            }
+          ]
+          volumes = [
+            {
+              name = "shm"
+              emptyDir = {
+                medium    = "Memory"
+                sizeLimit = "10Gi"
               }
             }
           ]
