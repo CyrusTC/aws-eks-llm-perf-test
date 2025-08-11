@@ -277,14 +277,6 @@ Performance testing across G5 instance types with GPT-OSS-20b model (200±20 inp
 - G5.48xlarge only justified for ultra-low latency requirements (< 2s)
 - G5.12xlarge offers balance of performance, cost, and operational simplicity
 
-## Hardware Specifications
-
-- **Instance Type**: G5.8xlarge
-- **GPU**: NVIDIA A10G (24GB VRAM)
-- **CPU**: 32 vCPUs
-- **Memory**: 128 GiB
-- **Network**: Up to 25 Gbps
-
 ## Monitoring
 
 ```bash
@@ -297,11 +289,3 @@ kubectl logs -n llm -l app=llm --tail=50
 # Check GPU nodes
 kubectl get nodes -l instanceType=gpu
 ```
-
-## Hardware Specifications
-
-- **Instance Type**: G5.8xlarge
-- **GPU**: NVIDIA A10G (24GB VRAM)
-- **CPU**: 32 vCPUs
-- **Memory**: 128 GiB
-- **Network**: Up to 25 Gbps
